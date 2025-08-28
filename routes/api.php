@@ -10,8 +10,22 @@ use App\Http\Controllers\API\MajalahController;
 use App\Http\Controllers\API\PengumumanController;
 use App\Http\Controllers\API\QnaController;
 use App\Http\Controllers\API\TestimoniController;
+
+use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\Berita\BeritaController;
+use App\Http\Controllers\API\Berita\KategoriBeritaController;
+use App\Http\Controllers\API\DewanYayasan\PengasuhController;
+use App\Http\Controllers\API\DewanYayasan\PimpinanController;
+use App\Http\Controllers\API\GuruStaff\GuruStaffController;
+use App\Http\Controllers\API\KaryaIlmiah\KaryaIlmiahController;
+use App\Http\Controllers\API\Partner\PartnerController;
+use App\Http\Controllers\API\Profile\ChangePassController;
+use App\Http\Controllers\API\Profile\ProfileController;
+use App\Http\Controllers\API\ProgramUnggulan\ProgramUnggulanController;
+use App\Http\Controllers\API\Slideshow\SlideshowController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -39,6 +53,7 @@ Route::prefix('/lowongan-kerja')->group(function () {
 
 Route::prefix('/testimoni')->group(function () {
     Route::get('/', [TestimoniController::class, 'index']);
+    Route::get('/latest', [TestimoniController::class, 'getLatest']);
     Route::get('/{id}', [TestimoniController::class, 'show']);
 });
 
@@ -49,6 +64,7 @@ Route::prefix('/ekstrakulikuler')->group(function () {
 
 Route::prefix('/agenda')->group(function () {
     Route::get('/', [AgendaController::class, 'index']);
+    Route::get('/latest', [AgendaController::class, 'getLatest']);
     Route::get('/{id}', [AgendaController::class, 'show']);
 });
 
@@ -66,39 +82,16 @@ Route::prefix('/fasilitas')->group(function () {
     Route::get('/', [FasilitasController::class, 'index']);
     Route::get('/{id}', [FasilitasController::class, 'show']);
 });
-<?php
 
-use App\Http\Api\Components\CKEditorController;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\Berita\BeritaController;
-use App\Http\Controllers\Api\Berita\KategoriBeritaController;
-use App\Http\Controllers\Api\DewanYayasan\PengasuhController;
-use App\Http\Controllers\Api\DewanYayasan\PimpinanController;
-use App\Http\Controllers\Api\GuruStaff\GuruStaffController;
-use App\Http\Controllers\Api\KaryaIlmiah\KaryaIlmiahController;
-use App\Http\Controllers\Api\Partner\PartnerController;
-use App\Http\Controllers\Api\Profile\ChangePassController;
-use App\Http\Controllers\Api\Profile\ProfileController;
-use App\Http\Controllers\Api\ProgramUnggulan\ProgramUnggulanController;
-use App\Http\Controllers\Api\Slideshow\SlideshowController;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+
+
 
 Route::post('/register', [AuthController::class, 'register'])->name('api.register.store');
 Route::post('/login/api', [AuthController::class, 'login'])->name('api.login.store');
@@ -190,4 +183,50 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         Route::put('/update/{id}', 'update')->name('karyailmiah.update');
         Route::delete('/delete/{id}', 'destroy')->name('karyailmiah.destroy');
     });
+
+    Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
 });
+
+
+
+//guest
+Route::get('/slideshow/', [SlideshowController::class, 'showAll'])->name('slideshows.index');
+
+Route::prefix('berita')->controller(BeritaController::class)->group(function () {
+    Route::get('/', 'showLimit')->name('berita.index');
+    Route::get('/{id}', 'showById')->name('detail_berita.index');
+});
+
+
+Route::get('/partner/', [PartnerController::class, 'showAllPublished'])->name('partner.index');
+
+Route::prefix('/dewan-yayasan')->group(function () {
+    Route::prefix('/pengasuh')
+        ->controller(PengasuhController::class)
+        ->group(function () {
+            Route::get('/', 'showIndex')->name('pengasuh.index');
+            Route::get('/{id}', 'showIndexById')->name('detail_pengasuh.index');
+        });
+    Route::prefix('/pimpinan')
+        ->controller(PimpinanController::class)
+        ->group(function () {
+            Route::get('/', 'showIndex')->name('pimpinan.index');
+            Route::get('/{id}', 'showIndexById')->name('detail_pimpinan.index');
+        });
+});
+
+
+Route::prefix('/gurustaff')
+    ->controller(GuruStaffController::class)
+    ->group(function () {
+        Route::get('/', 'showIndex')->name('gurustaff.index');
+        Route::get('/{id}', 'showIndexById')->name('detail_gurustaff.index');
+    });
+
+
+Route::prefix('/program-unggulan')
+    ->controller(ProgramUnggulanController::class)
+    ->group(function () {
+        Route::get('/', 'showIndex')->name('program-unggulan.index');
+        Route::get('/{id}', 'showIndexById')->name('detail_program-unggulan.index');
+    });
